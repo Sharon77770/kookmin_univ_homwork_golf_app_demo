@@ -1,0 +1,451 @@
+<!-- ...existing code... -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GolfLink - 반응형 데모</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
+
+        :root {
+            --primary-color: #0a3d24;
+            --bg-light: #f4f7f6;
+            --text-dark: #333;
+            --text-light: #777;
+            --border-color: #e0e0e0;
+        }
+
+        body {
+            font-family: 'Noto+Sans+KR', sans-serif;
+            margin: 0;
+            background-color: var(--primary-color);
+        }
+
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 25px;
+            color: white;
+        }
+
+        .app-header .app-title {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .app-header .menu-icon {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .sidebar-nav {
+            display: flex;
+            justify-content: flex-start;
+            padding: 0 25px 15px 25px;
+            gap: 20px;
+            background-color: var(--primary-color);
+        }
+
+        .desktop-title {
+            display: none;
+        }
+
+        .nav-link {
+            font-size: 16px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            padding-bottom: 5px;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .nav-link.active {
+            color: white;
+            font-weight: 700;
+            border-bottom-color: white;
+        }
+
+        .app-content {
+            background-color: var(--bg-light);
+            border-top-left-radius: 30px;
+            border-top-right-radius: 30px;
+            padding: 25px;
+            min-height: calc(100vh - 150px);
+        }
+
+        .page-content {
+            display: none;
+        }
+        .page-content.active {
+            display: block;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .latest-round {
+            position: relative;
+            color: white;
+            height: 180px;
+        }
+        .latest-round-bg {
+            width: 100%; height: 100%; object-fit: cover; position: absolute;
+            top: 0; left: 0; z-index: 1; filter: brightness(0.8);
+        }
+        .latest-round-content {
+            position: relative; z-index: 2; padding: 20px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.1) 100%);
+        }
+        .latest-round h2 { margin: 0 0 5px 0; font-size: 22px; }
+        .latest-round p { margin: 0; font-size: 14px; opacity: 0.9; }
+
+        .score-summary {
+            display: flex; justify-content: space-around; text-align: center; padding: 20px 10px;
+        }
+        .score-item { flex: 1; }
+        .score-item .value { font-size: 36px; font-weight: 700; color: var(--primary-color); }
+        .score-item .value small { font-size: 16px; font-weight: 500; margin-left: 2px; color: #555; }
+        .score-item .label { font-size: 13px; color: var(--text-light); margin-top: -5px; }
+
+        .score-trend, .recent-rounds { padding: 20px; }
+        .score-trend h3, .recent-rounds h3 {
+            margin: 0 0 15px 0; font-size: 18px; color: var(--text-dark);
+        }
+        .score-trend .graph-placeholder { width: 100%; }
+
+        .round-item {
+            display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;
+        }
+        .round-item:last-child { margin-bottom: 0; }
+        .round-info { display: flex; align-items: center; }
+        .round-info img {
+            width: 50px; height: 50px; border-radius: 10px;
+            object-fit: cover; margin-right: 15px;
+        }
+        .round-details h4 { margin: 0 0 3px 0; font-size: 16px; font-weight: 500; }
+        .round-details p { margin: 0; font-size: 13px; color: #888; }
+        .round-score { font-size: 24px; font-weight: 700; color: var(--primary-color); }
+
+        .ranking-list { padding: 20px; }
+        .ranking-list h3 { margin: 0 0 20px 0; font-size: 18px; color: var(--text-dark); }
+        .rank-item {
+            display: flex; align-items: center; margin-bottom: 15px;
+            padding: 10px; border-radius: 10px; transition: background-color 0.2s;
+        }
+        .rank-item.my-rank {
+            background-color: #e6f3ee; border: 1px solid var(--primary-color);
+        }
+        .rank-number { font-size: 18px; font-weight: 700; color: var(--primary-color); width: 30px; }
+        .rank-user-avatar {
+            width: 45px; height: 45px; border-radius: 50%;
+            object-fit: cover; margin: 0 15px;
+        }
+        .rank-user-info h4 { margin: 0 0 2px 0; font-size: 16px; font-weight: 500; }
+        .rank-user-info p { margin: 0; font-size: 13px; color: #888; }
+        .rank-score { margin-left: auto; font-size: 18px; font-weight: 700; color: var(--text-dark); }
+
+        .community-post { margin-bottom: 20px; }
+        .post-header { display: flex; align-items: center; padding: 15px 20px; }
+        .post-header img {
+            width: 40px; height: 40px; border-radius: 50%;
+            object-fit: cover; margin-right: 10px;
+        }
+        .post-author h4 { margin: 0 0 2px 0; font-size: 15px; font-weight: 500; }
+        .post-author p { margin: 0; font-size: 12px; color: #888; }
+        .post-content { padding: 0 20px 20px 20px; }
+        .post-content h3 { margin: 0 0 10px 0; font-size: 17px; }
+        .post-content p { margin: 0 0 15px 0; font-size: 14px; line-height: 1.6; color: #555; }
+        .post-image {
+            width: 100%; max-height: 200px; object-fit: cover;
+            border-radius: 10px; margin-bottom: 15px;
+        }
+        .post-actions {
+            border-top: 1px solid #f0f0f0; padding: 15px 20px;
+            display: flex; gap: 20px; color: var(--text-light); font-size: 14px;
+        }
+
+        @media (min-width: 1024px) {
+            body {
+                display: flex;
+                flex-direction: row;
+                background-color: var(--bg-light);
+            }
+
+            .app-header {
+                display: none;
+            }
+
+            .sidebar-nav {
+                flex: 0 0 280px;
+                height: 100vh;
+                flex-direction: column;
+                justify-content: flex-start;
+                padding: 30px;
+                gap: 10px;
+                box-sizing: border-box;
+            }
+
+            .desktop-title {
+                display: block;
+                font-size: 32px;
+                font-weight: 700;
+                color: white;
+                margin: 0 0 30px 15px;
+            }
+
+            .nav-link {
+                font-size: 18px;
+                padding: 15px 20px;
+                border-bottom: none;
+                border-radius: 10px;
+            }
+
+            .nav-link.active {
+                border-bottom: none;
+                background-color: rgba(255, 255, 255, 0.1);
+            }
+
+            .app-content {
+                flex: 1;
+                height: 100vh;
+                overflow-y: auto;
+                padding: 40px;
+                border-radius: 0;
+                box-sizing: border-box;
+            }
+
+            .app-content::-webkit-scrollbar {
+                width: 8px;
+            }
+            .app-content::-webkit-scrollbar-thumb {
+                background: #ccc; border-radius: 4px;
+            }
+            .app-content::-webkit-scrollbar-track {
+                background: var(--bg-light);
+            }
+
+            #dashboard-page.page-content.active {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: auto auto;
+                gap: 25px;
+            }
+
+            .latest-round { grid-column: 1 / 2; grid-row: 1 / 2; height: 220px; }
+            .score-summary { grid-column: 2 / 3; grid-row: 1 / 2; margin-bottom: 0; }
+            .score-trend { grid-column: 1 / 2; grid-row: 2 / 3; margin-bottom: 0; }
+            .recent-rounds { grid-column: 2 / 3; grid-row: 2 / 3; margin-bottom: 0; }
+
+            #ranking-page .card,
+            #community-page {
+                max-width: 800px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            #community-page .card {
+                margin-left: 0;
+                margin-right: 0;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <header class="app-header">
+        <span class="app-title">GolfLink</span>
+        <span class="menu-icon">☰</span>
+    </header>
+
+    <nav class="sidebar-nav">
+        <h1 class="desktop-title">GolfLink</h1>
+        
+        <span class="nav-link active" data-target="dashboard-page">대시보드</span>
+        <span class="nav-link" data-target="ranking-page">랭킹</span>
+        <span class="nav-link" data-target="community-page">커뮤니티</span>
+    </nav>
+
+    <main class="app-content">
+
+        <div id="dashboard-page" class="page-content active">
+            
+            <div class="card latest-round">
+                <img src="https://images.unsplash.com/photo-1535131749006-b7f58c99034b?w=400&h=200&fit=crop" 
+                     alt="최근 라운드 골프장 전경" class="latest-round-bg">
+                <div class="latest-round-content">
+                    <h2>서원 G.C.</h2>
+                    <p>2025년 10월 28일</p>
+                </div>
+            </div>
+
+            <div class="card score-summary">
+                <div class="score-item">
+                    <div class="value">85</div>
+                    <div class="label">총 타</div>
+                </div>
+                <div class="score-item">
+                    <div class="value">32</div>
+                    <div class="label">퍼팅</div>
+                </div>
+                <div class="score-item">
+                    <div class="value">2400<small>m</small></div>
+                    <div class="label">캐리 용읍</div>
+                </div>
+            </div>
+
+            <div class="card score-trend">
+                <h3>점수 변화 그래프</h3>
+                <svg class="graph-placeholder" viewBox="0 0 300 100" preserveAspectRatio="none">
+                    <polyline fill="none" stroke="#0a3d24" stroke-width="3"
+                        points="10,40 60,38 120,55 180,65 240,70 290,68" />
+                    <circle cx="10" cy="40" r="4" fill="#0a3d24"></circle>
+                    <circle cx="60" cy="38" r="4" fill="#0a3d24"></circle>
+                    <circle cx="120" cy="55" r="4" fill="#0a3d24"></circle>
+                    <circle cx="180" cy="65" r="4" fill="#0a3d24"></circle>
+                    <circle cx="240" cy="70" r="4" fill="#0a3d24"></circle>
+                    <circle cx="290" cy="68" r="4" fill="#0a3d24"></circle>
+                </svg>
+                <div style="display: flex; justify-content: space-between; font-size: 12px; color: #888; padding: 0 10px;">
+                    <span>10/1</span> <span>10/8</span> <span>10/15</span>
+                    <span>10/20</span> <span>10/25</span> <span>10/28</span>
+                </div>
+            </div>
+
+            <div class="card recent-rounds">
+                <h3>최근 라운드</h3>
+                <div class="round-item">
+                    <div class="round-info">
+                        <img src="https://images.unsplash.com/photo-1587132137056-bf600b080840?w=100&h=100&fit=crop" alt="용인 C.C.">
+                        <div class="round-details">
+                            <h4>용인 C.C.</h4>
+                            <p>2025년 10월 20일</p>
+                        </div>
+                    </div>
+                    <div class="round-score">90</div>
+                </div>
+                <div class="round-item">
+                    <div class="round-info">
+                        <img src="https://images.unsplash.com/photo-1622281530645-3f11d6d4ae0c?w=100&h=100&fit=crop" alt="이천 C.C.">
+                        <div class="round-details">
+                            <h4>이천 C.C.</h4>
+                            <p>2025년 10월 15일</p>
+                        </div>
+                    </div>
+                    <div class="round-score">88</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="ranking-page" class="page-content">
+            <div class="card ranking-list">
+                <h3>스코어 랭킹 (전국)</h3>
+                <div class="rank-item my-rank">
+                    <span class="rank-number">102</span>
+                    <img src="https://i.pravatar.cc/50?img=12" alt="내 프로필" class="rank-user-avatar">
+                    <div class="rank-user-info">
+                        <h4>나 (GolfMaster)</h4>
+                        <p>평균 89.5타</p>
+                    </div>
+                    <span class="rank-score">TOP 15%</span>
+                </div>
+                <div class="rank-item">
+                    <span class="rank-number">1</span>
+                    <img src="https://i.pravatar.cc/50?img=5" alt="사용자 1" class="rank-user-avatar">
+                    <div class="rank-user-info">
+                        <h4>ProGolfer_Kim</h4>
+                        <p>평균 71.2타</p>
+                    </div>
+                    <span class="rank-score">71.2</span>
+                </div>
+                <div class="rank-item">
+                    <span class="rank-number">2</span>
+                    <img src="https://i.pravatar.cc/50?img=3" alt="사용자 2" class="rank-user-avatar">
+                    <div class="rank-user-info">
+                        <h4>싱글이목표</h4>
+                        <p>평균 73.8타</p>
+                    </div>
+                    <span class="rank-score">73.8</span>
+                </div>
+                <div class="rank-item">
+                    <span class="rank-number">3</span>
+                    <img src="https://i.pravatar.cc/50?img=7" alt="사용자 3" class="rank-user-avatar">
+                    <div class="rank-user-info">
+                        <h4>이글찬스</h4>
+                        <p>평균 74.1타</p>
+                    </div>
+                    <span class="rank-score">74.1</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="community-page" class="page-content">
+            <div class="card community-post">
+                <div class="post-header">
+                    <img src="https://i.pravatar.cc/50?img=9" alt="커뮤니티 사용자 1" class="post-user-avatar">
+                    <div class="post-author">
+                        <h4>주말골퍼</h4>
+                        <p>1시간 전</p>
+                    </div>
+                </div>
+                <div class="post-content">
+                    <h3>주말 필드 라운드 후기</h3>
+                    <p>오늘 서원GC 다녀왔는데 날씨가 정말 좋았네요. 스코어는 85타로 만족합니다! 다들 즐거운 라운딩 되셨나요?</p>
+                    <img src="https://images.unsplash.com/photo-1562089228-8f8e0d9b4f9f?w=400&h=200&fit=crop" alt="골프공 사진" class="post-image">
+                </div>
+                <div class="post-actions">
+                    <span>👍 좋아요 12</span>
+                    <span>💬 댓글 4</span>
+                </div>
+            </div>
+            <div class="card community-post">
+                <div class="post-header">
+                    <img src="https://i.pravatar.cc/50?img=11" alt="커뮤니티 사용자 2" class="post-user-avatar">
+                    <div class="post-author">
+                        <h4>드라이버샷</h4>
+                        <p>3시간 전</p>
+                    </div>
+                </div>
+                <div class="post-content">
+                    <h3>드라이버 슬라이스 잡는 법 팁 공유좀요...</h3>
+                    <p>요즘 계속 슬라이스가 나서 미치겠습니다. 좋은 연습 방법이나 팁 있으면 공유 부탁드립니다 ㅠㅠ</p>
+                </div>
+                <div class="post-actions">
+                    <span>👍 좋아요 5</span>
+                    <span>💬 댓글 18</span>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const navLinks = document.querySelectorAll('.nav-link');
+            const pages = document.querySelectorAll('.page-content');
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('data-target');
+
+                    navLinks.forEach(nav => nav.classList.remove('active'));
+                    this.classList.add('active');
+
+                    pages.forEach(page => page.classList.remove('active'));
+                    document.getElementById(targetId).classList.add('active');
+                });
+            });
+        });
+    </script>
+
+</body>
+</html>

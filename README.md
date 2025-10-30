@@ -1,1 +1,0 @@
-# kookmin_univ_homwork_golf_app_demo
